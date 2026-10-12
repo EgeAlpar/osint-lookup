@@ -1,69 +1,90 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+
+import type { CSSProperties } from 'react'
+import { SearchForm } from './components/SearchForm'
+import { ResultList } from './components/ResultList'
+import { useSearch } from './useSearch'
+
+const wrap: CSSProperties = {
+  maxWidth: 860,
+  margin: '0 auto',
+  padding: '48px 16px 80px',
+}
+
+const statusBar: CSSProperties = {
+  marginTop: 16,
+  fontSize: 13,
+  color: 'var(--muted)',
+  minHeight: 20,
+}
+
+const STATE_TEXT: Record<string, string> = {
+  idle: '',
+  running: 'Searching…',
+  done: 'Search complete.',
+  cancelled: 'Cancelled.',
+  error: '',
+}
+
+function downloadJson(filename: string, data: unknown) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 export default function Home() {
+  const { status, search, cancel } = useSearch()
+  const { state, findings, error, query } = status
+  const running = state === 'running'
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main style={wrap}>
+      <header style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: '0 0 6px', fontSize: 28 }}>OSINT Lookup</h1>
+        <p style={{ margin: 0, color: 'var(--muted)', fontSize: 14 }}>
+          Enter an email or username. The app queries many public sources in parallel and streams
+          results as they arrive. Use it only for your own accounts, with permission, or on
+          non-personal targets. Nothing is stored.
+        </p>
+      </header>
+
+      <SearchForm running={running} onSearch={search} onCancel={cancel} />
+
+      <div style={statusBar}>
+        {state === 'error' ? (
+          <span style={{ color: 'var(--error)' }}>Error: {error}</span>
+        ) : (
+          <span>
+            {STATE_TEXT[state]}
+            {findings.length > 0 ? ` ${findings.length} result(s).` : ''}
+            {query ? ` Query: ${query.kind} "${query.value}".` : ''}
+          </span>
+        )}
+        {findings.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => downloadJson(`osint-${query?.value ?? 'results'}.json`, { query, findings })}
+            style={{
+              marginLeft: 10,
+              padding: '2px 10px',
+              fontSize: 12,
+              cursor: 'pointer',
+              borderRadius: 8,
+              border: '1px solid var(--border)',
+              background: 'transparent',
+              color: 'var(--accent)',
+            }}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+            Export JSON
+          </button>
+        ) : null}
+      </div>
+
+      <ResultList findings={findings} />
+    </main>
+  )
 }

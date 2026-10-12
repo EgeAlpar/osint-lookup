@@ -1,0 +1,54 @@
+[
+  {
+    "name": "Firefox Accounts",
+    "kind": "email",
+    "method": "POST",
+    "urlTemplate": "https://api.accounts.firefox.com/v1/account/status",
+    "displayUrl": "https://accounts.firefox.com/",
+    "headers": { "Content-Type": "application/json" },
+    "body": { "email": "{q}" },
+    "rules": { "foundText": ["\"exists\":true"], "notFoundText": ["\"exists\":false"] }
+  },
+  {
+    "name": "Microsoft",
+    "kind": "email",
+    "method": "POST",
+    "urlTemplate": "https://login.microsoftonline.com/common/GetCredentialType",
+    "displayUrl": "https://account.microsoft.com/",
+    "headers": { "Content-Type": "application/json" },
+    "body": { "Username": "{q}" },
+    "rules": { "foundText": ["\"IfExistsResult\":0", "\"IfExistsResult\":5", "\"IfExistsResult\":6"], "notFoundText": ["\"IfExistsResult\":1"] }
+  },
+  {
+    "name": "WordPress.com",
+    "kind": "email",
+    "method": "GET",
+    "urlTemplate": "https://public-api.wordpress.com/rest/v1.1/users/{q}/auth-options",
+    "displayUrl": "https://wordpress.com/",
+    "rules": { "notFoundText": ["unknown_user"], "matchAnyStatus": true, "foundText": ["passwordless"] }
+  },
+  {
+    "name": "Duolingo",
+    "kind": "email",
+    "method": "GET",
+    "urlTemplate": "https://www.duolingo.com/2017-06-30/users?fields=username&email={q}",
+    "displayUrl": "https://www.duolingo.com/",
+    "rules": { "foundText": ["\"username\""], "notFoundText": ["\"users\":[]"] }
+  },
+  {
+    "name": "Chess.com",
+    "kind": "email",
+    "method": "GET",
+    "urlTemplate": "https://www.chess.com/callback/email/available?email={q}",
+    "displayUrl": "https://www.chess.com/",
+    "rules": { "foundText": ["\"isEmailAvailable\":false"], "notFoundText": ["\"isEmailAvailable\":true"] }
+  },
+  {
+    "name": "Spotify",
+    "kind": "email",
+    "method": "GET",
+    "urlTemplate": "https://spclient.wg.spotify.com/signup/public/v1/account?validate=1&email={q}",
+    "displayUrl": "https://www.spotify.com/",
+    "rules": { "foundText": ["\"status\":20"], "notFoundText": ["\"status\":1,"], "matchAnyStatus": true }
+  }
+]
