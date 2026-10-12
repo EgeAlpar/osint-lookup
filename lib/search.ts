@@ -4,7 +4,7 @@ import { encodeEvent } from './ndjson'
 import { allProviders } from './providers'
 import type { Env, Query, StreamEvent } from './types'
 
-const CONCURRENCY = 10
+const CONCURRENCY = 14
 
 /** Run a search and emit NDJSON StreamEvents as a byte stream. */
 export function searchStream(query: Query, env: Env, signal: AbortSignal): ReadableStream<Uint8Array> {

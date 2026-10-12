@@ -6,6 +6,8 @@ import { searchStream } from '@/lib/search'
 // The handler reads the query string, request headers and the abort signal,
 // so it always runs at request time (incompatible with cacheComponents config).
 
+export const maxDuration = 60
+
 const rateLimit = createRateLimiter({ limit: 20, windowMs: 60_000 })
 
 const clientKey = (req: NextRequest): string => {
