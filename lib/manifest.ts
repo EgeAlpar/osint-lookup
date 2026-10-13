@@ -8,6 +8,11 @@ export interface SiteDef {
   /** Url actually requested, when it differs from the profile url (e.g. a JSON API). */
   readonly probeTemplate?: string
   readonly rules: ExistRules
+  /**
+   * JSON-API sites only: map of output label to a dotted path into the parsed
+   * response, copied into the finding data when the profile is found.
+   */
+  readonly extract?: Readonly<Record<string, string>>
 }
 
 export type HttpMethod = 'GET' | 'POST'
@@ -75,6 +80,17 @@ function checkName(index: number, raw: Raw): string {
   return raw.name
 }
 
+function checkExtract(
+  where: string,
+  raw: unknown,
+): Readonly<Record<string, string>> | undefined {
+  if (raw === undefined) return undefined
+  if (!isRecord(raw) || !Object.values(raw).every((v) => typeof v === 'string')) {
+    return fail(where, 'extract must map strings to dotted-path strings')
+  }
+  return raw as Record<string, string>
+}
+
 export function parseSites(input: unknown): readonly SiteDef[] {
   if (!Array.isArray(input)) throw new Error('Sites manifest must be an array')
   return input.map((raw: unknown, index): SiteDef => {
@@ -87,6 +103,7 @@ export function parseSites(input: unknown): readonly SiteDef[] {
         probeTemplate: checkTemplate(name, raw.probeTemplate, true),
       }),
       rules: checkRules(name, raw.rules),
+      ...(raw.extract !== undefined && { extract: checkExtract(name, raw.extract) }),
     }
   })
 }

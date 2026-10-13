@@ -1,4 +1,5 @@
 import { classify } from '../classify'
+import { extractData } from '../extract'
 import { httpFetch } from '../http'
 import type { SiteDef } from '../manifest'
 import { fillUrl } from '../template'
@@ -26,7 +27,8 @@ const looksLikeChallenge = (body: string): boolean =>
  * Check `value` against every site in a manifest, one request each under the
  * shared concurrency limit. Shared by the username and email-handle providers.
  * A `found` verdict on a bot-challenge body is downgraded to `ambiguous` so a
- * reported profile link always points at a real page.
+ * reported profile link always points at a real page. When a site declares an
+ * `extract` map, matching fields from its JSON response enrich the finding.
  */
 export function runSiteChecks(
   providerId: string,
@@ -48,11 +50,16 @@ export function runSiteChecks(
           status = 'ambiguous'
           challengeNote = 'blocked by bot protection; could not verify'
         }
+        const data =
+          status === 'found' && site.extract !== undefined
+            ? extractData(response.body, site.extract)
+            : undefined
         return {
           provider: providerId,
           site: site.name,
           status,
           url: profileUrl,
+          ...(data !== undefined && { data }),
           ...(challengeNote !== undefined
             ? { note: challengeNote }
             : note !== undefined && { note }),
